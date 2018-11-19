@@ -13,6 +13,13 @@ import (
 	rest "github.com/cseeger-epages/restfool-go"
 )
 
+type ServerInfo struct {
+	Server   string
+	Port     int
+	User     string
+	Password string
+}
+
 // AddInterfaceHandlers generate the handlers for a interface ... code generatio would be the way to go here
 func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl interface{}) {
 
@@ -54,10 +61,10 @@ func unboxSingleString(w http.ResponseWriter, r *http.Request) string {
 }
 
 // CallStringFunctionOferRest calls a function over rest that requires only a single string input
-func CallStringFunctionOferRest(functionName string, toSend string) {
+func CallStringFunctionOferRest(info ServerInfo, functionName string, toSend string) {
 	fmt.Println("start building request")
-	e := eater.NewEater("127.0.0.1", 9443)
-	e.SetBasicAuth("testuser", "testpass")
+	e := eater.NewEater(info.Server, info.Port)
+	e.SetBasicAuth(info.User, info.Password)
 	e.SetVerifyTLS(false)
 
 	req := e.CreateRequest("/"+functionName, "POST", url.Values{"data": {toSend}})

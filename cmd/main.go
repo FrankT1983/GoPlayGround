@@ -10,4 +10,7 @@ func main() {
 	fmt.Println("Hello World")
 	printer := printerFactory.BuildLocalPrinter()
 	printer.PrintToLog("Foo")
+
+	printer2 := printerFactory.BuildRestPrinter()
+	printer2.PrintToLog("Foo2")
 }

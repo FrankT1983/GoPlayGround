@@ -11,6 +11,8 @@ func main() {
 	printer := printerFactory.BuildLocalPrinter()
 	printer.PrintToLog("Foo")
 
+	fmt.Println("Print 2")
 	printer2 := printerFactory.BuildRestPrinter()
-	printer2.PrintToLog("Foo2")
+	printer2.PrintToLog("Foo over rest")
+
 }

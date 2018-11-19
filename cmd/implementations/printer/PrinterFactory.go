@@ -3,6 +3,7 @@ package factories
 import (
 	impl "github.com/FrankT1983/GoPlayGround/cmd/implementations/printer/impls"
 	inf "github.com/FrankT1983/GoPlayGround/cmd/interface"
+	restHelper "github.com/FrankT1983/GoPlayGround/restHelper"
 )
 
 // BuildLocalPrinter returns an implementation of the IPrinter interface which runs localy
@@ -14,7 +15,7 @@ func BuildLocalPrinter() inf.IPrinter {
 
 // BuildLocalPrinter returns an implementation of the IPrinter interface which runs remotly
 // behind a REST interface.
-func BuildRestPrinter() inf.IPrinter {
-	result := impl.RestLoggerEndpoint{LoggerName: "foo"}
+func BuildRestPrinter(info restHelper.ServerInfo) inf.IPrinter {
+	result := impl.RestLoggerEndpoint{LoggerName: "foo", Server: info}
 	return result
 }

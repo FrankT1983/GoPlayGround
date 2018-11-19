@@ -7,10 +7,11 @@ import (
 // RestLoggerEndpoint implemnet the IPrinter interface by providing an REST endpoint.
 type RestLoggerEndpoint struct {
 	LoggerName string
+	Server     restHelper.ServerInfo
 }
 
 // PrintToLog implements the IPrinter interface function.
 func (l RestLoggerEndpoint) PrintToLog(toPrint string) {
 	// send rest request
-	restHelper.CallStringFunctionOferRest("PrintToLog", toPrint)
+	restHelper.CallStringFunctionOferRest(l.Server, "PrintToLog", toPrint)
 }

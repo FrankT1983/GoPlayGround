@@ -15,6 +15,6 @@ func BuildLocalPrinter() inf.IPrinter {
 // BuildLocalPrinter returns an implementation of the IPrinter interface which runs remotly
 // behind a REST interface.
 func BuildRestPrinter() inf.IPrinter {
-	result := impl.RestLoggerendpoint{LoggerName: "foo"}
+	result := impl.RestLoggerEndpoint{LoggerName: "foo"}
 	return result
 }

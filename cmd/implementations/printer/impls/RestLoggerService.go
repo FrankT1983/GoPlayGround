@@ -10,14 +10,27 @@ import (
 	rest "github.com/cseeger-epages/restfool-go"
 )
 
-var logger inf.IPrinter
+type RestLoggerService struct {
+	logger     inf.IPrinter
+	configPaht string
+}
 
-func main() {
-	confFile := flag.String("c", "conf/api.conf", "path to config ile")
+// NewRestLoggerService creates a new service
+func NewRestLoggerService(myConfigPaht string) RestLoggerService {
+	result := RestLoggerService{
+		logger:     LogPrinter{LoggerName: "foo"},
+		configPaht: myConfigPaht,
+	}
+	return result
+}
+
+// Start starts the service
+func (l RestLoggerService) Start() {
+	confFile := flag.String("c", l.configPaht, "path to config ile")
 
 	flag.Parse()
 	// realy would like to use the Factory
-	logger = LogPrinter{LoggerName: "foo"}
+	l.logger = LogPrinter{LoggerName: "foo"}
 
 	// initialize rest api using conf file
 	api, err := rest.New(*confFile)
@@ -26,7 +39,7 @@ func main() {
 	}
 
 	// add handler
-	err = api.AddHandler("Print", "GET", "/", "Print To Logger", index)
+	err = api.AddHandler("Print", "GET", "/", "Print To Logger", l.index)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,11 +51,11 @@ func main() {
 	}
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
+func (l RestLoggerService) index(w http.ResponseWriter, r *http.Request) {
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
-	logger.PrintToLog("Foo")
+	l.logger.PrintToLog("Foo")
 
 	qs := rest.ParseQueryStrings(r)
 	message := fmt.Sprintf("Welcome to restfool take a look at https://%s/help", r.Host)

@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
-
-	factory "github.com/FrankT1983/GoPlayGround/cmd/implemenation/printer/PrinterFactory"
+	"github.com/FrankT1983/GoPlayGround/cmd/implementations/printer"
 )
 
 func main() {
 	fmt.Println("Hello World")
-	printer = factory.BuildLocalPrinter()
+	PrinterFacotry factory;
+	printer := factory.BuildLocalPrinter()
+	printer.PrintToLog("Foo")
 }
+
+

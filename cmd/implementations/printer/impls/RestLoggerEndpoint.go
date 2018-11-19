@@ -4,12 +4,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// LogPrinter is an implementation of the IPrinter interface used to print locally.
-type LogPrinter struct {
+// RestLoggerEndpoint implemnet the IPrinter interface by providing an REST endpoint.
+type RestLoggerEndpoint struct {
 	LoggerName string
 }
 
 // PrintToLog implements the IPrinter interface function.
-func (l LogPrinter) PrintToLog(toPrint string) {
+func (l RestLoggerEndpoint) PrintToLog(toPrint string) {
 	log.WithFields(log.Fields{"Origin": "LogPrinter"}).Info(toPrint)
+}
+
+func init() {
+
 }

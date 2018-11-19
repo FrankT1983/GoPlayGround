@@ -3,7 +3,6 @@ package impls
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -58,10 +57,9 @@ func (l RestLoggerService) printHandler(w http.ResponseWriter, r *http.Request) 
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
-	bodyBytes, _ := ioutil.ReadAll(r.Body)
-	bodyString := string(bodyBytes)
-
-	l.logger.PrintToLog(bodyString)
+	r.ParseForm()           // Parses the request body
+	x := r.Form.Get("data") // x will be "" if parameter is not set
+	l.logger.PrintToLog(x)
 
 	qs := rest.ParseQueryStrings(r)
 	message := fmt.Sprintf("Welcome to restfool take a look at https://%s/help", r.Host)

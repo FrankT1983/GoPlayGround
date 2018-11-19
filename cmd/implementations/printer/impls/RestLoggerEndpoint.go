@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	eater "github.com/cseeger-epages/resteater-go"
@@ -20,15 +21,13 @@ func (l RestLoggerEndpoint) PrintToLog(toPrint string) {
 	help(toPrint)
 }
 
-func help(method string) ([]byte, error) {
+func help(toPrint string) ([]byte, error) {
 	fmt.Println("start building request")
 	e := eater.NewEater("127.0.0.1", 9443)
 	e.SetBasicAuth("testuser", "testpass")
 	e.SetVerifyTLS(false)
 
-	req := e.CreateRequest("/Print", "POST", nil)
-
-	fmt.Println("send request")
+	req := e.CreateRequest("/Print", "POST", url.Values{"data": {toPrint}})
 	resp, err := req.Go()
 	if err != nil {
 
@@ -37,8 +36,6 @@ func help(method string) ([]byte, error) {
 	}
 
 	if resp.StatusCode == http.StatusOK {
-
-		fmt.Println("status OK")
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
@@ -49,7 +46,6 @@ func help(method string) ([]byte, error) {
 		return b, nil
 	}
 
-	fmt.Println("status not OK")
 	fmt.Printf("statusCode: %d - %s\n", resp.StatusCode, http.StatusText(resp.StatusCode))
 	return nil, fmt.Errorf("statusCode: %d - %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 }

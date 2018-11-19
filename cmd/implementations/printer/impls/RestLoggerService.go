@@ -3,6 +3,7 @@ package impls
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -39,7 +40,7 @@ func (l RestLoggerService) Start() {
 	}
 
 	// add handler
-	err = api.AddHandler("Print", "GET", "/", "Print To Logger", l.index)
+	err = api.AddHandler("Print", "POST", "/Print", "Print To Logger", l.printHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,11 +52,16 @@ func (l RestLoggerService) Start() {
 	}
 }
 
-func (l RestLoggerService) index(w http.ResponseWriter, r *http.Request) {
+func (l RestLoggerService) printHandler(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("Someone called print")
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
-	l.logger.PrintToLog("Foo")
+	bodyBytes, _ := ioutil.ReadAll(r.Body)
+	bodyString := string(bodyBytes)
+
+	l.logger.PrintToLog(bodyString)
 
 	qs := rest.ParseQueryStrings(r)
 	message := fmt.Sprintf("Welcome to restfool take a look at https://%s/help", r.Host)

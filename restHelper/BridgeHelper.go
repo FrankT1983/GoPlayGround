@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"encoding/json"
@@ -47,8 +48,7 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 				in[0] = reflect.ValueOf(s)
 				method.Call(in)
 			}
-		}
-		if method.Type().In(0).Kind() == reflect.Struct {
+		} else if method.Type().In(0).Kind() == reflect.Struct {
 			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
 				inS := reflect.New(method.Type().In(0)).Elem().Interface()
 				unboxSingleStruct(w, r, &inS)
@@ -56,7 +56,7 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 				method.Call(in)
 			}
 		} else {
-			log.Fatal("Input parameter type not defined for " + methodName)
+			log.Fatal("Input parameter type not defined for " + methodName + " : " + method.Type().In(0).Name())
 		}
 
 		err := api.AddHandler(methodName, "POST", "/"+methodName, methodName, handlingClosure)
@@ -70,8 +70,6 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 }
 
 func unboxSingleString(w http.ResponseWriter, r *http.Request) string {
-
-	fmt.Println("Someone called print")
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
@@ -86,8 +84,6 @@ func unboxSingleString(w http.ResponseWriter, r *http.Request) string {
 }
 
 func unboxSingleStruct(w http.ResponseWriter, r *http.Request, structToFill *interface{}) {
-
-	fmt.Println("Someone called print")
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
@@ -95,6 +91,7 @@ func unboxSingleStruct(w http.ResponseWriter, r *http.Request, structToFill *int
 	x := r.Form.Get("data") // x will be "" if parameter is not set
 
 	if err := json.Unmarshal([]byte(x), &structToFill); err != nil {
+		fmt.Println("Failure during unmarshal")
 		panic(err)
 	}
 
@@ -109,7 +106,6 @@ func createRequest(info ServerInfo, functionName string, form url.Values) eater.
 	e := eater.NewEater(info.Server, info.Port)
 	e.SetBasicAuth(info.User, info.Password)
 	e.SetVerifyTLS(false)
-
 	req := e.CreateRequest("/"+functionName, "POST", form)
 	return req
 }
@@ -137,13 +133,9 @@ func handleResponseAndErrors(resp *http.Response, err error) {
 
 // CallStringFunctionOverRest calls a function over rest that requires only a single string input
 func CallStringFunctionOverRest(info ServerInfo, functionName string, toSend string) {
-	fmt.Println("start building request")
-
 	req := createRequest(info, functionName, url.Values{"data": {toSend}, "type": {"string"}})
-
 	resp, err := req.Go()
 	handleResponseAndErrors(resp, err)
-
 	return
 }
 
@@ -161,4 +153,19 @@ func CallStructFunctionOverRest(info ServerInfo, functionName string, toSend int
 	resp, err := req.Go()
 	handleResponseAndErrors(resp, err)
 	return
+}
+
+// WhereAmI returns the simple name of the function in which it is called
+// got this from: https://lawlessguy.wordpress.com/2016/04/17/display-file-function-and-line-number-in-go-golang/
+func WhereAmI(depthList ...int) string {
+	var depth int
+	if depthList == nil {
+		depth = 1
+	} else {
+		depth = depthList[0]
+	}
+	function, _, _, _ := runtime.Caller(depth)
+	fullName := runtime.FuncForPC(function).Name()
+	tmp := strings.Split(fullName, ".")
+	return tmp[len(tmp)-1]
 }

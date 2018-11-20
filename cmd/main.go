@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	printerFactory "github.com/FrankT1983/GoPlayGround/cmd/implementations/printer"
+	inf "github.com/FrankT1983/GoPlayGround/cmd/interface"
 	restHelper "github.com/FrankT1983/GoPlayGround/restHelper"
 )
 
@@ -19,5 +20,8 @@ func main() {
 		Password: "testpass"}
 	fmt.Println("Print 2")
 	printer2 := printerFactory.BuildRestPrinter(serverInfo)
+	printer2.PrintToLog("Foo over rest")
+
+	message = inf.LoggingMessage{MessageString: "More Complex", TypeName: "TestMessage"}
 	printer2.PrintToLog("Foo over rest")
 }

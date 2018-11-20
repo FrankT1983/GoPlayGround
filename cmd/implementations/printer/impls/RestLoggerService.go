@@ -20,7 +20,7 @@ type RestLoggerService struct {
 func NewRestLoggerService(myConfigPaht string) RestLoggerService {
 	result := RestLoggerService{
 		// realy would like to use the Factory here, but that would produce a circular dependency
-		logger:     LogPrinter{LoggerName: "foo"},
+		logger:     LogPrinter{LoggerName: "RestLoggerService"},
 		configPaht: myConfigPaht,
 	}
 	return result

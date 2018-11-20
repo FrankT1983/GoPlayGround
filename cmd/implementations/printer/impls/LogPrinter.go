@@ -13,10 +13,10 @@ type LogPrinter struct {
 
 // PrintToLog implements the IPrinter interface function.
 func (l LogPrinter) PrintToLog(toPrint string) {
-	log.WithFields(log.Fields{"Origin": "LogPrinter"}).Info(toPrint)
+	log.WithFields(log.Fields{"Origin": l.LoggerName}).Info(toPrint)
 }
 
 // PrintMessageToLog implements the IPrinter interface function.
 func (l LogPrinter) PrintMessageToLog(toPrint inf.LoggingMessage) {
-	log.WithFields(log.Fields{"Type": toPrint.TypeName}).Info(toPrint.MessageString)
+	log.WithFields(log.Fields{"Origin": l.PrintMessageToLog, "Type": toPrint.TypeName}).Info(toPrint.MessageString)
 }

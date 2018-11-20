@@ -38,7 +38,7 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 
 		in := make([]reflect.Value, method.Type().NumIn())
 
-		var handlingClosure func(w http.ResponseWriter, r *http.Request)
+		var handlingClosure func(http.ResponseWriter, *http.Request)
 		// todo: use a switch?
 		switch method.Type().In(0).Kind() {
 		case reflect.String:

@@ -9,13 +9,13 @@ import (
 // BuildLocalPrinter returns an implementation of the IPrinter interface which runs localy
 // on the same thread.
 func BuildLocalPrinter() inf.IPrinter {
-	result := impl.LogPrinter{LoggerName: "foo"}
+	result := impl.LogPrinter{LoggerName: "LocalPrinter"}
 	return result
 }
 
-// BuildLocalPrinter returns an implementation of the IPrinter interface which runs remotly
+// BuildRestPrinter returns an implementation of the IPrinter interface which runs remotly
 // behind a REST interface.
 func BuildRestPrinter(info restHelper.ServerInfo) inf.IPrinter {
-	result := impl.RestLoggerEndpoint{LoggerName: "foo", Server: info}
+	result := impl.RestLoggerEndpoint{LoggerName: "RestPrinter", Server: info}
 	return result
 }

@@ -50,9 +50,9 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 			}
 		} else if method.Type().In(0).Kind() == reflect.Struct {
 			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
-				inS := reflect.New(method.Type().In(0)).Elem().Interface()
+				inS := reflect.New(method.Type().In(0))
 				unboxSingleStruct(w, r, &inS)
-				in[0] = reflect.ValueOf(inS)
+				in[0] = reflect.ValueOf(inS.Elem().Interface())
 				method.Call(in)
 			}
 		} else {
@@ -83,13 +83,14 @@ func unboxSingleString(w http.ResponseWriter, r *http.Request) string {
 	return x
 }
 
-func unboxSingleStruct(w http.ResponseWriter, r *http.Request, structToFill *interface{}) {
+func unboxSingleStruct(w http.ResponseWriter, r *http.Request, valueToFill *reflect.Value) {
 	// dont need to cache ?
 	w.Header().Set("Cache-Control", "no-store")
 
 	r.ParseForm()           // Parses the request body
 	x := r.Form.Get("data") // x will be "" if parameter is not set
 
+	structToFill := valueToFill.Interface()
 	if err := json.Unmarshal([]byte(x), &structToFill); err != nil {
 		fmt.Println("Failure during unmarshal")
 		panic(err)

@@ -9,10 +9,13 @@ import (
 	"reflect"
 	"strings"
 
+	"encoding/json"
+
 	eater "github.com/cseeger-epages/resteater-go"
 	rest "github.com/cseeger-epages/restfool-go"
 )
 
+// ServerInfo encapsules simpe authentication information for a server
 type ServerInfo struct {
 	Server   string
 	Port     int
@@ -27,11 +30,33 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 		methodName := interfaceType.Method(i).Name
 
 		method := reflect.ValueOf(impl).MethodByName(methodName)
+		if method.Type().NumIn() != 1 {
+			log.Fatal("Cannot jet automatically handle more than 1 parameter for function " + methodName)
+			continue
+		}
+
 		in := make([]reflect.Value, method.Type().NumIn())
+
 		var handlingClosure = func(w http.ResponseWriter, r *http.Request) {
-			s := unboxSingleString(w, r)
-			in[0] = reflect.ValueOf(s)
-			method.Call(in)
+		}
+
+		// todo: use a switch?
+		if method.Type().In(0).Kind() == reflect.String {
+			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
+				s := unboxSingleString(w, r)
+				in[0] = reflect.ValueOf(s)
+				method.Call(in)
+			}
+		}
+		if method.Type().In(0).Kind() == reflect.Struct {
+			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
+				inS := reflect.New(method.Type().In(0)).Elem().Interface()
+				unboxSingleStruct(w, r, &inS)
+				in[0] = reflect.ValueOf(inS)
+				method.Call(in)
+			}
+		} else {
+			log.Fatal("Input parameter type not defined for " + methodName)
 		}
 
 		err := api.AddHandler(methodName, "POST", "/"+methodName, methodName, handlingClosure)
@@ -60,17 +85,37 @@ func unboxSingleString(w http.ResponseWriter, r *http.Request) string {
 	return x
 }
 
-// CallStringFunctionOferRest calls a function over rest that requires only a single string input
-func CallStringFunctionOferRest(info ServerInfo, functionName string, toSend string) {
-	fmt.Println("start building request")
+func unboxSingleStruct(w http.ResponseWriter, r *http.Request, structToFill *interface{}) {
+
+	fmt.Println("Someone called print")
+	// dont need to cache ?
+	w.Header().Set("Cache-Control", "no-store")
+
+	r.ParseForm()           // Parses the request body
+	x := r.Form.Get("data") // x will be "" if parameter is not set
+
+	if err := json.Unmarshal([]byte(x), &structToFill); err != nil {
+		panic(err)
+	}
+
+	qs := rest.ParseQueryStrings(r)
+	message := fmt.Sprintf("Welcome to restfool take a look at https://%s/help", r.Host)
+	msg := rest.Msg{Message: message}
+	rest.EncodeAndSend(w, r, qs, msg)
+	return
+}
+
+func createRequest(info ServerInfo, functionName string, form url.Values) eater.Request {
 	e := eater.NewEater(info.Server, info.Port)
 	e.SetBasicAuth(info.User, info.Password)
 	e.SetVerifyTLS(false)
 
-	req := e.CreateRequest("/"+functionName, "POST", url.Values{"data": {toSend}})
-	resp, err := req.Go()
-	if err != nil {
+	req := e.CreateRequest("/"+functionName, "POST", form)
+	return req
+}
 
+func handleResponseAndErrors(resp *http.Response, err error) {
+	if err != nil {
 		fmt.Println("ups ... error " + string(err.Error()))
 		return
 	}
@@ -87,5 +132,33 @@ func CallStringFunctionOferRest(info ServerInfo, functionName string, toSend str
 	}
 
 	fmt.Printf("statusCode: %d - %s\n", resp.StatusCode, http.StatusText(resp.StatusCode))
+
+}
+
+// CallStringFunctionOverRest calls a function over rest that requires only a single string input
+func CallStringFunctionOverRest(info ServerInfo, functionName string, toSend string) {
+	fmt.Println("start building request")
+
+	req := createRequest(info, functionName, url.Values{"data": {toSend}, "type": {"string"}})
+
+	resp, err := req.Go()
+	handleResponseAndErrors(resp, err)
+
+	return
+}
+
+//CallStructFunctionOverRest calls a function over rest that requires only a single string input
+func CallStructFunctionOverRest(info ServerInfo, functionName string, toSend interface{}) {
+
+	b, err := json.Marshal(toSend)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	req := createRequest(info, functionName, url.Values{"data": {string(b)}, "type": {"json"}})
+
+	resp, err := req.Go()
+	handleResponseAndErrors(resp, err)
 	return
 }

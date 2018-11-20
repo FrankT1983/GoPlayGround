@@ -19,6 +19,7 @@ type RestLoggerService struct {
 // NewRestLoggerService creates a new service
 func NewRestLoggerService(myConfigPaht string) RestLoggerService {
 	result := RestLoggerService{
+		// realy would like to use the Factory here, but that would produce a circular dependency
 		logger:     LogPrinter{LoggerName: "foo"},
 		configPaht: myConfigPaht,
 	}
@@ -28,10 +29,8 @@ func NewRestLoggerService(myConfigPaht string) RestLoggerService {
 // Start starts the service
 func (l RestLoggerService) Start() {
 	confFile := flag.String("c", l.configPaht, "path to config ile")
-
 	flag.Parse()
-	// realy would like to use the Factory
-	l.logger = LogPrinter{LoggerName: "foo"}
+
 	// initialize rest api using conf file
 	api, err := rest.New(*confFile)
 	if err != nil {

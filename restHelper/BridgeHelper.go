@@ -38,25 +38,29 @@ func AddInterfaceHandlers(api rest.RestAPI, interfaceType reflect.Type, impl int
 
 		in := make([]reflect.Value, method.Type().NumIn())
 
-		var handlingClosure = func(w http.ResponseWriter, r *http.Request) {
-		}
-
+		var handlingClosure func(w http.ResponseWriter, r *http.Request)
 		// todo: use a switch?
-		if method.Type().In(0).Kind() == reflect.String {
-			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
-				s := unboxSingleString(w, r)
-				in[0] = reflect.ValueOf(s)
-				method.Call(in)
+		switch method.Type().In(0).Kind() {
+		case reflect.String:
+			{
+				handlingClosure = func(w http.ResponseWriter, r *http.Request) {
+					s := unboxSingleString(w, r)
+					in[0] = reflect.ValueOf(s)
+					method.Call(in)
+				}
 			}
-		} else if method.Type().In(0).Kind() == reflect.Struct {
-			handlingClosure = func(w http.ResponseWriter, r *http.Request) {
-				inS := reflect.New(method.Type().In(0))
-				unboxSingleStruct(w, r, &inS)
-				in[0] = reflect.ValueOf(inS.Elem().Interface())
-				method.Call(in)
+		case reflect.Struct:
+			{
+				handlingClosure = func(w http.ResponseWriter, r *http.Request) {
+					inS := reflect.New(method.Type().In(0))
+					unboxSingleStruct(w, r, &inS)
+					in[0] = reflect.ValueOf(inS.Elem().Interface())
+					method.Call(in)
+				}
 			}
-		} else {
+		default:
 			log.Fatal("Input parameter type not defined for " + methodName + " : " + method.Type().In(0).Name())
+			continue
 		}
 
 		err := api.AddHandler(methodName, "POST", "/"+methodName, methodName, handlingClosure)
